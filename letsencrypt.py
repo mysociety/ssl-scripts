@@ -29,9 +29,10 @@ class CertManagerCallable(object):
             pass  # Not yet implemented
         else:
             for v in args.vhost:
-                self._do_vhost(v)
+                domains = self._get_vhost_domains(v)
+                self._generate_certificates(domains)
 
-    def _do_vhost(self, vhost_name):
+    def _get_vhost_domains(self, vhost_name):
         # Get vhosts.pl definition
         try:
             data = self.known_vhosts[vhost_name]
@@ -53,10 +54,30 @@ class CertManagerCallable(object):
             cn = vhost_name
         dns_names.remove(cn)
 
-        # Prepare arguments to simp_le
+        return [cn] + sorted(list(dns_names))
 
-        all_vhosts_args = ['-d', cn]
-        for v in dns_names:
+    def _generate_certificates(self, domains, cert_name=None):
+        if not domains:
+            return
+        if not cert_name:
+            cert_name = domains[0]
+
+        for i in range(0, len(domains), 100):
+            if len(domains)>100:
+                cn = '%s.%s' % (chr(i/100+65), cert_name)
+            else:
+                cn = cert_name
+            self._generate_certificate(domains[i:i+100], cert_name=cn)
+
+    def _generate_certificate(self, domains, cert_name=None):
+        if not domains:
+            return
+        if not cert_name:
+            cert_name = domains[0]
+
+        # Prepare arguments to simp_le
+        all_vhosts_args = []
+        for v in domains:
             all_vhosts_args.append("-d")
             all_vhosts_args.append(v)
 
@@ -89,9 +110,12 @@ class CertManagerCallable(object):
             '--tos_sha256', '6373439b9f29d67a5cd4d18cbc7f264809342dbf21cb2ba2fc7588df987a6221',
             '--server', ca_url], cwd=actual_cwd)
 
-        if actual_cwd:
-            os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cn))
-            os.rename(os.path.join(actual_cwd, 'fullchain.pem'), os.path.join(actual_cwd, '%s.crt' % cn))
+        if self.dry_run:
+            print "Rename key.pem to %s.key" % cert_name
+            print "Rename fullchain.pem to %s.crt" % cert_name
+        else:
+            os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cert_name))
+            os.rename(os.path.join(actual_cwd, 'fullchain.pem'), os.path.join(actual_cwd, '%s.crt' % cert_name))
 
     def _arg_parser(self):
         parser = argparse.ArgumentParser()
