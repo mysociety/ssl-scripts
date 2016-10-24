@@ -85,10 +85,10 @@ class CertManagerCallable(object):
         # and where should certificate target dir be?
         if self.which_ca == "prod":
             ca_url = self.ACME_PROD_ENDPOINT
-            vhost_cwd = "/data/letsencrypt/certificates/" + vhost_name
+            vhost_cwd = "/data/letsencrypt/certificates"
         elif self.which_ca == "staging":
             ca_url = self.ACME_STAGING_ENDPOINT
-            vhost_cwd = "/data/letsencrypt/staging_certificates/" + vhost_name
+            vhost_cwd = "/data/letsencrypt/staging_certificates"
 
         # Make certificate target directory if not exists
         if not os.path.exists(vhost_cwd):
