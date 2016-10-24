@@ -27,6 +27,12 @@ class CertManagerCallable(object):
 
         if args.all_vhosts:
             pass  # Not yet implemented
+        elif args.group:
+            domains = []
+            for vhost, data in self.known_vhosts.items():
+                if 'ssl_group' in data and data['ssl_group'] == args.group:
+                    domains += self._get_vhost_domains(vhost)
+            self._generate_certificates(domains, cert_name="%s.group" % args.group)
         else:
             for v in args.vhost:
                 domains = self._get_vhost_domains(v)
@@ -135,6 +141,7 @@ class CertManagerCallable(object):
         which_vhosts_group = parser.add_mutually_exclusive_group(required=True)
         which_vhosts_group.add_argument(
             '--all-vhosts', action='store_true', dest='all_vhosts', default=False, help="Apply to all eligible vhosts")
+        which_vhosts_group.add_argument('--group', action='store', help="Specify a particular vhost group")
         which_vhosts_group.add_argument('vhost', nargs='*', default=[], help="Specify a particular vhost")
 
         # Misc options
