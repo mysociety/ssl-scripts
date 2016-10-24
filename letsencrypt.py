@@ -89,6 +89,10 @@ class CertManagerCallable(object):
             '--tos_sha256', '6373439b9f29d67a5cd4d18cbc7f264809342dbf21cb2ba2fc7588df987a6221',
             '--server', ca_url], cwd=actual_cwd)
 
+        if actual_cwd:
+            os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cn))
+            os.rename(os.path.join(actual_cwd, 'fullchain.pem'), os.path.join(actual_cwd, '%s.crt' % cn))
+
     def _arg_parser(self):
         parser = argparse.ArgumentParser()
         # Run mode
