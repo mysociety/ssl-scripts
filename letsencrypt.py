@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+from utils import Vhosts
 
 
 class CertManagerCallable(object):
@@ -12,8 +13,6 @@ class CertManagerCallable(object):
     ACME_PROD_ENDPOINT = "https://acme-v01.api.letsencrypt.org/directory"
 
     dry_run = None
-    known_vhosts = None
-    vhosts = None
     which_ca = None
 
     def __call__(self):
@@ -23,44 +22,20 @@ class CertManagerCallable(object):
         self.dry_run = args.dry_run
         self.which_ca = args.which_ca
 
-        self.known_vhosts = self._parse_vhosts_pl(args.vhosts_pl_path)
+        known_vhosts = Vhosts(args.vhosts_pl_path)
 
         if args.all_vhosts:
             pass  # Not yet implemented
         elif args.group:
             domains = []
-            for vhost, data in self.known_vhosts.items():
+            for vhost, data in known_vhosts.items():
                 if 'ssl_group' in data and data['ssl_group'] == args.group:
-                    domains += self._get_vhost_domains(vhost)
+                    domains += data['domains']
             self._generate_certificates(domains, cert_name="%s.group" % args.group)
         else:
             for v in args.vhost:
-                domains = self._get_vhost_domains(v)
+                domains = known_vhosts[v]['domains']
                 self._generate_certificates(domains)
-
-    def _get_vhost_domains(self, vhost_name):
-        # Get vhosts.pl definition
-        try:
-            data = self.known_vhosts[vhost_name]
-        except KeyError:
-            sys.exit("Unknown vhost name '%s' given" % vhost_name)
-
-        # Determine CN and SAN names
-        aliases = data.get('aliases', [])
-        redirects = data.get('redirects', [])
-
-        dns_names = set()
-        dns_names.add(vhost_name)
-        dns_names.update(aliases)
-        dns_names.update(redirects)
-
-        if vhost_name in redirects:
-            cn = aliases[0]
-        else:
-            cn = vhost_name
-        dns_names.remove(cn)
-
-        return [cn] + sorted(list(dns_names))
 
     def _generate_certificates(self, domains, cert_name=None):
         if not domains:
@@ -150,15 +125,6 @@ class CertManagerCallable(object):
             help="Override path to vhosts.pl (FOR TESTING USE)")
 
         return parser
-
-    def _parse_vhosts_pl_section(self, vhosts_pl_path, section):
-        return json.loads(subprocess.check_output([
-            'perl', '-e', 'use JSON; require "' + vhosts_pl_path + '"; print encode_json($' + section + ');'
-        ]))
-
-    def _parse_vhosts_pl(self, vhosts_pl_path):
-        vhosts = self._parse_vhosts_pl_section(vhosts_pl_path, 'vhosts')
-        return vhosts
 
 
 if __name__ == '__main__':
