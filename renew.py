@@ -22,6 +22,11 @@ class CertRenewerCallable(object):
         self.fill_lookups()
         self.output()
 
+    def step(self, s, col=4):
+        print '[3%dm%d. %s[m' % (col, self.step_num, s)
+        self.step_num += 1
+
+
     def fill_lookups(self):
         for vhost, data in self.vhosts.items():
             if 'ssl_group' in data:
@@ -38,8 +43,10 @@ class CertRenewerCallable(object):
                 continue
 
             # We have a soon-to-be expiring certificate
-            print '[34m# %s expires at %s[m' % (data['filename'], data['expiry'])
+            self.step_num = 1
+            print '[36m%s expires at %s[m' % (data['filename'], data['expiry'])
             if data['filename'].startswith('wildcard'):
+                self.step('Replace wildcard certificate with one for all needed domains\n')
                 continue
 
             # Let's see which vhosts.pl entries the domains of the certificate map to
@@ -49,21 +56,41 @@ class CertRenewerCallable(object):
                     print '[31mError dealing with %s[m' % vhost
                     vhosts_to_renew.remove(vhost)
             if not vhosts_to_renew:
+                print
                 continue
 
             # Okay, we have something we can renew
-            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m'
+            self.step('Dry run')
+            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --dry-run --staging-ca'
+            self.step('Check the output looks sensible (e.g. contains the domains you expect)', 1)
+            self.step('Live run, Staging CA')
+            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --staging-ca'
             for vhost in vhosts_to_renew:
                 if vhost.startswith('--group'):
                     cert_filename = vhost.split(' ')[1] + '.group'
                 else:
                     cert_filename = self.vhosts[vhost]['domains'][0]
-                print 'cp /data/letsencrypt/certificates/%s.crt /data/letsencrypt/certificates/%s.key /data/servers/certificates/' % (cert_filename, cert_filename)
+                print 'ls /data/letsencrypt/staging_certificates/%s*' % cert_filename
+            self.step('Live run, Production CA')
+            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --prod-ca'
+            for vhost in vhosts_to_renew:
+                if vhost.startswith('--group'):
+                    cert_filename = vhost.split(' ')[1] + '.group'
+                else:
+                    cert_filename = self.vhosts[vhost]['domains'][0]
+                self.step('Move new data into /data/servers')
+                print 'sudo mv /data/letsencrypt/certificates/%s.crt /data/letsencrypt/certificates/%s.key /data/servers/certificates/' % (cert_filename, cert_filename)
+                self.step('Commit certificate and key in /data/servers', 1)
+                self.step('Copy certificate and key to correct locations')
                 for server in self.server_lookup.get(vhost, []):
                     server = '[32m%s[m' % server
                     print 'sudo scp /data/servers/certificates/%s.crt %s:/etc/nginx/ssl.crt/' % (cert_filename, server)
                     print 'sudo scp /data/servers/certificates/%s.key %s:/etc/nginx/ssl.key/' % (cert_filename, server)
                     print 'sudo ssh %s /etc/init.d/nginx reload' % server
+                self.step('Check expiry time')
+                print 'openssl s_client -servername %s -connect %s:443 </dev/null 2>/dev/null | openssl x509 -noout -enddate' % (vhost, vhost)
+                self.step('Unchanged expiry time probably means there is an old manual certificate with a different filename')
+            print
 
     @staticmethod
     def get_cert_data():
