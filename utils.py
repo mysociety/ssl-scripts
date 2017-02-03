@@ -23,6 +23,10 @@ class Vhosts(collections.Mapping):
                 'cacti.mysociety.org', 'graphite.mysociety.org', 'puppet-dashboard.mysociety.org', 'git.mysociety.org'
             ] 
         }
+        self.vhosts['mysocietyemergency.org'] = {
+            'servers': ['emergency'],
+            'aliases': ['www.mysocietyemergency.org']
+        }
 
     def __getitem__(self, key):
         vhost = self.vhosts[key]
