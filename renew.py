@@ -79,14 +79,13 @@ class CertRenewerCallable(object):
                 else:
                     cert_filename = self.vhosts[vhost]['domains'][0]
                 self.step('Move new data into /data/servers')
-                print 'sudo mv /data/letsencrypt/certificates/%s.crt /data/letsencrypt/certificates/%s.key /data/servers/certificates/' % (cert_filename, cert_filename)
-                self.step('Commit certificate and key in /data/servers', 1)
-                self.step('Copy certificate and key to correct locations')
+                print 'sudo mv /data/letsencrypt/certificates/%s.crt /data/puppet/site/profiles/files/certificates/etc/ssl/mysociety/certs/' % cert_filename
+                print 'sudo mv /data/letsencrypt/certificates/%s.key /data/puppet/site/profiles/files/certificates/etc/ssl/mysociety/keys/' % cert_filename
+                self.step('Commit certificate and key in /data/puppet and push. Puppet will deploy the new files and restart Nginx.', 1)
+                self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on leopard or to be more discriminating:')
                 for server in self.server_lookup.get(vhost, []):
                     server = '[32m%s[m' % server
-                    print 'sudo scp /data/servers/certificates/%s.crt %s:/etc/nginx/ssl.crt/' % (cert_filename, server)
-                    print 'sudo scp /data/servers/certificates/%s.key %s:/etc/nginx/ssl.key/' % (cert_filename, server)
-                    print 'sudo ssh %s /etc/init.d/nginx reload' % server
+                    print 'sudo ssh %s mysociety config' % server
                 self.step('Check expiry time')
                 print 'openssl s_client -servername %s -connect %s:443 </dev/null 2>/dev/null | openssl x509 -noout -enddate' % (vhost, vhost)
                 self.step('Unchanged expiry time probably means there is an old manual certificate with a different filename')
@@ -94,7 +93,7 @@ class CertRenewerCallable(object):
 
     @staticmethod
     def get_cert_data():
-        for crt in sorted(glob.glob('/data/servers/certificates/*.crt')):
+        for crt in sorted(glob.glob('/etc/ssl/mysociety/certs/*.crt')):
             with open(crt) as f:
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
             expiry = cert.get_notAfter()
@@ -122,4 +121,3 @@ class CertRenewerCallable(object):
 if __name__ == '__main__':
     cmc = CertRenewerCallable()
     cmc()
-
