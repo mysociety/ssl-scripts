@@ -13,12 +13,12 @@ class Vhosts(collections.Mapping):
         # Special additions
         self.vhosts['mx0.mysociety.org'] = {
             'ssl_group': 'Mail',
-            'servers': ['ocelot', 'leopard', 'crow', 'pelican'],
-            'aliases': ['mx1.mysociety.org', 'mx0.ukcod.org.uk', 'mx1.ukcod.org.uk', 'mailbox.mysociety.org', ]
+            'servers': ['leopard', 'crow'],
+            'aliases': ['mx1.mysociety.org', 'mx0.ukcod.org.uk', 'mx1.ukcod.org.uk']
         }
         self.vhosts['git.mysociety.org'] = {
             'ssl_group': 'mySociety',
-            'servers': ['leopard', 'ocelot', 'vesta', 'panther', 'kingfisher'],
+            'servers': ['leopard', 'panther', 'kingfisher'],
             'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'nagios-external.mysociety.org',
                 'cacti.mysociety.org', 'puppet-dashboard.mysociety.org', 'git.mysociety.org',
                 'icinga.mysociety.org', 'icinga-external.mysociety.org', 'grafana.mysociety.org'
