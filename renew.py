@@ -20,7 +20,12 @@ class CertRenewerCallable(object):
         self.server_lookup = collections.defaultdict(set)
 
         self.fill_lookups()
-        self.output()
+
+        if args.list:
+            self.list()
+        else:
+            self.output()
+
 
     def step(self, s, col=4):
         print '[3%dm%d. %s[m' % (col, self.step_num, s)
@@ -36,6 +41,32 @@ class CertRenewerCallable(object):
             self.server_lookup[res] |= set(data['servers'])
             for domain in data['domains']:
                 self.domain_lookup[domain] = res
+
+    def list(self):
+        for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
+            if data['expiry'] >= self.future:
+                continue
+
+            # Just skip this for now.
+            if data['filename'].startswith('wildcard'):
+                continue
+
+            # Let's see which vhosts.pl entries the domains of the certificate map to
+            vhosts_to_renew = set(self.domain_lookup.get(dom, dom) for dom in data['domains'])
+            for vhost in vhosts_to_renew.copy():
+                if not vhost.startswith('--group') and vhost not in self.vhosts:
+                    vhosts_to_renew.remove(vhost)
+            if not vhosts_to_renew:
+                print
+                continue
+
+            for vhost in vhosts_to_renew:
+                if vhost.startswith('--group'):
+                    cert_filename = vhost.split(' ')[1] + '.group'
+                else:
+                    cert_filename = self.vhosts[vhost]['domains'][0]
+
+            print ' '.join(vhosts_to_renew) + ',' + cert_filename
 
     def output(self):
         for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
@@ -115,6 +146,8 @@ class CertRenewerCallable(object):
     def _arg_parser():
         parser = argparse.ArgumentParser()
         parser.add_argument('--weeks', default=4, type=int, help='Number of weeks to look forward')
+        # Whether to just list things
+        parser.add_argument('--list', action='store_true', help='Just list the domains/groups for renewal with their filenames rather than full instructions for manual renewals')
         return parser
 
 
