@@ -53,7 +53,7 @@ while read renewal; do
             cd $START_DIR
         fi
     fi
-done < <( $START_DIR/renew.py --auto-renew --weeks=$WEEKS )
+done < <( $START_DIR/renew.py --list --weeks=$WEEKS )
 
 echo "$( date "+%b %d %T" ) Ending SSL certificate autorenew run" >>$LOGFILE
 
