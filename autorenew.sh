@@ -41,8 +41,8 @@ while read renewal; do
             git checkout --quiet ssl_renewals
             git fetch --quiet
             git rebase --quiet origin/master
-            mv $CERT_DIR/${cert_file}.crt $PUPPET_DIR/certs/
-            mv $CERT_DIR/${cert_file}.key $PUPPET_DIR/keys
+            mv $CERT_DIR/*${cert_file}.crt $PUPPET_DIR/certs/
+            mv $CERT_DIR/*${cert_file}.key $PUPPET_DIR/keys
             chown -R :privatecvs $PUPPET_DIR/
             chmod -R 0664 $PUPPET_DIR/certs/
             chmod -R 0660 $PUPPET_DIR/keys
@@ -63,4 +63,3 @@ if [ "$ERROR_COUNT" != "0" ]; then
 fi
 
 exit $ERROR_COUNT
-
