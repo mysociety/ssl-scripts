@@ -44,8 +44,8 @@ while read renewal; do
             mv $CERT_DIR/*${cert_file}.crt $PUPPET_DIR/certs/
             mv $CERT_DIR/*${cert_file}.key $PUPPET_DIR/keys
             chown -R :privatecvs $PUPPET_DIR/
-            chmod -R 0664 $PUPPET_DIR/certs/
-            chmod -R 0660 $PUPPET_DIR/keys
+            chmod 0664 $PUPPET_DIR/certs/*
+            chmod 0660 $PUPPET_DIR/keys/*
             git add $PUPPET_DIR/*
             git commit --quiet -m "SSL: auto-renewed $certificate"
             git push --quiet origin ssl_renewals 2>/dev/null
