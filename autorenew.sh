@@ -38,7 +38,7 @@ while read renewal; do
         else
             # Copy certificates into the right place, commit, etc.
             cd /data/puppet
-            git checkout --quiet ssl_renewals
+            git checkout --quiet master
             git fetch --quiet
             git rebase --quiet origin/master
             mv $CERT_DIR/*${cert_file}.crt $PUPPET_DIR/certs/
@@ -48,8 +48,11 @@ while read renewal; do
             chmod 0660 $PUPPET_DIR/keys/*
             git add $PUPPET_DIR/*
             git commit --quiet -m "SSL: auto-renewed $certificate"
-            git push --quiet origin ssl_renewals 2>/dev/null
-            git checkout --quiet master
+            git push --quiet origin master 2>/dev/null
+            if [ "$?" != "0" ]; then
+              (( ERROR_COUNT++ ))
+              ERROR_CERTS="$certificate: Problem pushing to origin; $ERROR_CERTS"
+            fi
             cd $START_DIR
         fi
     fi
