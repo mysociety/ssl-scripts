@@ -44,6 +44,9 @@ class Vhosts(collections.Mapping):
         # Determine CN and SAN names
         aliases = data.get('aliases', [])
         redirects = data.get('redirects', [])
+        ignore = data.get('https_ignore', [])
+        if not isinstance(ignore, list):
+            ignore = [ignore]
 
         dns_names = set()
         dns_names.add(vhost_name)
@@ -55,6 +58,10 @@ class Vhosts(collections.Mapping):
         else:
             cn = vhost_name
         dns_names.remove(cn)
+
+        if cn in ignore:
+            cn = dns_names.pop()
+        dns_names -= set(ignore)
 
         return [cn] + sorted(list(dns_names))
 
