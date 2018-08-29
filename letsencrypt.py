@@ -88,7 +88,6 @@ class CertManagerCallable(object):
             'simp_le', '--email', 'infrastructure@mysociety.org',
             '--default_root', '/data/letsencrypt/webroot/'] + all_vhosts_args + [
             '-f', 'key.pem', '-f', 'account_key.json', '-f', 'fullchain.pem',
-            '--tos_sha256', '6373439b9f29d67a5cd4d18cbc7f264809342dbf21cb2ba2fc7588df987a6221',
             '--server', ca_url], cwd=actual_cwd)
 
         if self.dry_run:
