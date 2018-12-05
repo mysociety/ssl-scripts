@@ -20,8 +20,8 @@ class Vhosts(collections.Mapping):
             'ssl_group': 'mySociety',
             'servers': ['leopard', 'panther', 'kingfisher', 'raven'],
             'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'nagios-external.mysociety.org',
-                'puppet-dashboard.mysociety.org', 'git.mysociety.org', 'icinga.mysociety.org',
-                'icinga-external.mysociety.org', 'grafana.mysociety.org', 'puppetboard.mysociety.org'
+                'git.mysociety.org', 'icinga.mysociety.org', 'icinga-external.mysociety.org', 
+                'grafana.mysociety.org', 'puppetboard.mysociety.org'
             ]
         }
         self.vhosts['mysocietyemergency.org'] = {
