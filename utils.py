@@ -58,12 +58,14 @@ class Vhosts(collections.Mapping):
         else:
             cn = vhost_name
         dns_names.remove(cn)
-
-        if cn in ignore:
-            cn = dns_names.pop()
         dns_names -= set(ignore)
 
-        return [cn] + sorted(list(dns_names))
+        if cn in ignore:
+            ssl_dns_names = sorted(list(dns_names))
+        else:
+            ssl_dns_names = [cn] + sorted(list(dns_names))
+
+        return ssl_dns_names
 
     def _parse_vhosts_pl_section(self, vhosts_pl_path, section):
         return json.loads(subprocess.check_output([
