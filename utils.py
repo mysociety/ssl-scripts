@@ -21,7 +21,7 @@ class Vhosts(collections.Mapping):
             'servers': ['leopard', 'panther', 'kingfisher', 'raven'],
             'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'nagios-external.mysociety.org',
                 'git.mysociety.org', 'icinga.mysociety.org', 'icinga-external.mysociety.org', 
-                'grafana.mysociety.org', 'puppetboard.mysociety.org'
+                'grafana.mysociety.org'
             ]
         }
         self.vhosts['mysocietyemergency.org'] = {
