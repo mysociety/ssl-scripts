@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -e
+
+DOMAIN=
+STAGING=
+FORCE=
+
+while test -n "$1"; do
+    case "$1" in
+	--domain)
+	    DOMAIN=$2
+	    shift
+	    shift
+	    ;;
+	--staging)
+	    STAGING=--staging
+	    shift
+	    ;;
+	--force)
+	    FORCE=--force
+	    shift
+	    ;;
+	*)
+	    echo "Unknown argument: $1"
+	    exit 1
+	    ;;
+  esac
+done
+
+if [ "$DOMAIN" == "" ] ; then
+    echo "==> Please provide a --domain foo.tld argument."
+    exit 1
+fi
+
+export NSUPDATE_SERVER="ns0.ukcod.org.uk"
+export NSUPDATE_KEY="/data/letsencrypt/etc/acme.key"
+
+echo "==> Attempting to issue cert for $DOMAIN"
+cd /data/letsencrypt/acme.sh
+source ./acme.sh.env
+./acme.sh --issue -d ${DOMAIN} -d *.${DOMAIN} \
+	  --domain-alias ${DOMAIN}.acme.mysociety.org \
+	  --dns dns_nsupdate \
+	  --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
+	  $STAGING $FORCE
+
+if [ "$?" -ne "0" ] ; then
+   echo "==> There was a problem issuing the certificate for ${DOMAIN}."
+   exit 1
+fi
+
+echo "==> Attempting to install certificate for ${DOMAIN}."
+PUPPET_PATH=/data/puppet/site/profiles/files/certificates/etc/ssl/mysociety
+if [ "$STAGING" == "" ] ; then
+    CRT_PATH=${PUPPET_PATH}/certs
+    KEY_PATH=${PUPPET_PATH}/keys
+    CMD="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-reloadcmd ${DOMAIN}"
+else
+    CRT_PATH=/tmp
+    KEY_PATH=/tmp
+    CMD="/bin/true"
+fi
+
+./acme.sh --install-cert -d ${DOMAIN} \
+	  --fullchain-file ${CRT_PATH}/wildcard.${DOMAIN}.crt \
+	  --key-file ${KEY_PATH}/wildcard.${DOMAIN}.key \
+	  --reloadcmd "${CMD}"
+
