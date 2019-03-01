@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Run after successful certificate issue/renewal following install
+#
+
+DOMAIN=$1
+
+git -C /data/puppet add site/profiles/files/certificates/etc/ssl/mysociety
+git -C /data/puppet commit --quiet -m "SSL: acme.sh certificate for ${DOMAIN}"
+git -C /data/puppet push --quiet origin master 2>/dev/null

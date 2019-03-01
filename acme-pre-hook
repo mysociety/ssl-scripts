@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Run before each certificate issue/renewal
+#
+
+git -C /data/puppet checkout --quiet master
+git -C /data/puppet fetch --quiet
+git -C /data/puppet rebase --quiet origin/master
