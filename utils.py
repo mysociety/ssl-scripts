@@ -14,7 +14,7 @@ class Vhosts(collections.Mapping):
         self.vhosts['mx0.mysociety.org'] = {
             'ssl_group': 'Mail',
             'servers': ['bittern', 'starling'],
-            'aliases': ['mx1.mysociety.org', 'mx0.ukcod.org.uk', 'mx1.ukcod.org.uk']
+            'aliases': ['mx1.mysociety.org', 'mx0.ukcod.org.uk', 'mx1.ukcod.org.uk', 'smtp.mysociety.org']
         }
         self.vhosts['git.mysociety.org'] = {
             'ssl_group': 'mySociety',
