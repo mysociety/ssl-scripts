@@ -21,11 +21,14 @@ class CertManagerCallable(object):
 
         self.dry_run = args.dry_run
         self.which_ca = args.which_ca
+        self.force_issue = args.force_issue
 
         known_vhosts = Vhosts(args.vhosts_pl_path)
 
         if args.all_vhosts:
             pass  # Not yet implemented
+        elif args.wildcard_cert:
+            self._generate_wildcard_certificate(args.wildcard_cert)
         elif args.group:
             domains = []
             for vhost, data in known_vhosts.items():
@@ -36,6 +39,26 @@ class CertManagerCallable(object):
             for v in args.vhost:
                 domains = known_vhosts[v]['domains']
                 self._generate_certificates(domains)
+
+    def _generate_wildcard_certificate(self, cn):
+
+        # cater for a dry run.
+        if self.dry_run:
+            cmd_prefix = ['echo']
+        else:
+            cmd_prefix = []
+
+        # cater for optional arguments.
+        acme_args = []
+        if self.which_ca == "staging":
+            acme_args.append("--staging")
+
+        if self.force_issue:
+            acme_args.append("--force")
+
+        subprocess.check_call(cmd_prefix +
+            ['sudo', './acme-sh-helper', '--domain', cn] +
+            acme_args, cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
 
     def _generate_certificates(self, domains, cert_name=None):
         if not domains:
@@ -111,10 +134,14 @@ class CertManagerCallable(object):
         staging_or_prod_group.add_argument(
             '--prod-ca', action='store_const', dest='which_ca', const='prod', help='Use LetsEncrypt Production CA')
 
+        # Force. Only really useful with `--wildcard`
+        parser.add_argument('--force', action='store_true', dest='force_issue', default=False, help="Force issue even if no renewal appears necessary")
+
         # Vhost selection
         which_vhosts_group = parser.add_mutually_exclusive_group(required=True)
         which_vhosts_group.add_argument(
             '--all-vhosts', action='store_true', dest='all_vhosts', default=False, help="Apply to all eligible vhosts")
+        which_vhosts_group.add_argument('--wildcard', action="store", dest='wildcard_cert', help="Issue a wildcard certificate.")
         which_vhosts_group.add_argument('--group', action='store', help="Specify a particular vhost group")
         which_vhosts_group.add_argument('vhost', nargs='*', default=[], help="Specify a particular vhost")
 
