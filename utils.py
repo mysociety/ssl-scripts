@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import collections
 import json
@@ -70,7 +70,7 @@ class Vhosts(collections.Mapping):
     def _parse_vhosts_pl_section(self, vhosts_pl_path, section):
         return json.loads(subprocess.check_output([
             'perl', '-e', 'use JSON; require "' + vhosts_pl_path + '"; print encode_json($' + section + ');'
-        ]))
+        ]).decode('utf-8'))
 
     def _parse_vhosts_pl(self, vhosts_pl_path):
         vhosts = self._parse_vhosts_pl_section(vhosts_pl_path, 'vhosts')
