@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import argparse
 import json
 import os
@@ -114,8 +114,8 @@ class CertManagerCallable(object):
             '--server', ca_url], cwd=actual_cwd)
 
         if self.dry_run:
-            print "Rename key.pem to %s.key" % cert_name
-            print "Rename fullchain.pem to %s.crt" % cert_name
+            print("Rename key.pem to %s.key" % cert_name)
+            print("Rename fullchain.pem to %s.crt" % cert_name)
             print("Run ./simp_le-git-helper %s %s" % (vhost_cwd, cert_name))
         else:
             os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cert_name))
