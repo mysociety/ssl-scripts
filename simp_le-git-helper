@@ -1,0 +1,14 @@
+#!/bin/bash
+
+CERT_DIR=$1
+CERT_NAME=$2
+PUPPET_DIR=site/profiles/files/certificates/etc/ssl/mysociety
+
+git -C /data/puppet checkout --quiet master
+git -C /data/puppet fetch --quiet
+git -C /data/puppet rebase --quiet origin/master
+mv ${CERT_DIR}/${CERT_NAME}.key /data/puppet/${PUPPET_DIR}/keys/
+mv ${CERT_DIR}/${CERT_NAME}.crt /data/puppet/${PUPPET_DIR}/certs/
+git -C /data/puppet add ${PUPPET_DIR}
+git -C /data/puppet commit --quiet -m "SSL: certificate for ${CERT_NAME}"
+git -C /data/puppet push --quiet origin master 2>/dev/null

@@ -116,9 +116,17 @@ class CertManagerCallable(object):
         if self.dry_run:
             print "Rename key.pem to %s.key" % cert_name
             print "Rename fullchain.pem to %s.crt" % cert_name
+            print("Run ./simp_le-git-helper %s %s" % (vhost_cwd, cert_name))
         else:
             os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cert_name))
             os.rename(os.path.join(actual_cwd, 'fullchain.pem'), os.path.join(actual_cwd, '%s.crt' % cert_name))
+            if self.which_ca == "prod":
+                self._add_to_puppet(cmd_prefix, actual_cwd, cert_name)
+            else:
+                print("Not adding to Puppet in staging.")
+
+    def _add_to_puppet(self, cmd_prefix, cert_dir, cert_name):
+        subprocess.check_call(['./simp_le-git-helper', cert_dir, cert_name ], cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
 
     def _arg_parser(self):
         parser = argparse.ArgumentParser()
