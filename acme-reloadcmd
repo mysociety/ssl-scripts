@@ -6,9 +6,6 @@
 DOMAIN=$1
 PUPPET_DIR=site/profiles/files/certificates/etc/ssl/mysociety
 
-chown -R :privategit-puppet /data/puppet/${PUPPET_DIR}/
-chmod 0664 /data/puppet/${PUPPET_DIR}/certs/*
-chmod 0660 /data/puppet/${PUPPET_DIR}/keys/*
 git -C /data/puppet add ${PUPPET_DIR}
 git -C /data/puppet commit --quiet -m "SSL: acme.sh certificate for ${DOMAIN}"
 git -C /data/puppet push --quiet origin master 2>/dev/null
