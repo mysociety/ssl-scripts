@@ -43,7 +43,7 @@ while read renewal; do
             git rebase --quiet origin/master
             mv $CERT_DIR/*${cert_file}.crt $PUPPET_DIR/certs/
             mv $CERT_DIR/*${cert_file}.key $PUPPET_DIR/keys
-            chown -R :privatecvs $PUPPET_DIR/
+            chown -R :privategit-puppet $PUPPET_DIR/
             chmod 0664 $PUPPET_DIR/certs/*
             chmod 0660 $PUPPET_DIR/keys/*
             git add $PUPPET_DIR/*

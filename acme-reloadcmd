@@ -6,7 +6,7 @@
 DOMAIN=$1
 PUPPET_DIR=site/profiles/files/certificates/etc/ssl/mysociety
 
-chown -R :privatecvs /data/puppet/${PUPPET_DIR}/
+chown -R :privategit-puppet /data/puppet/${PUPPET_DIR}/
 chmod 0664 /data/puppet/${PUPPET_DIR}/certs/*
 chmod 0660 /data/puppet/${PUPPET_DIR}/keys/*
 git -C /data/puppet add ${PUPPET_DIR}
