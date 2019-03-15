@@ -10,8 +10,6 @@ LOGFILE="/var/log/letsencrypt/autorenew.log"
 ERROR_COUNT=0
 ERROR_CERTS=
 WEEKS=2
-CERT_DIR=/data/letsencrypt/certificates
-PUPPET_DIR=/data/puppet/site/profiles/files/certificates/etc/ssl/mysociety
 
 cd $START_DIR
 
@@ -35,25 +33,6 @@ while read renewal; do
             echo "Problem running $certificate through the Production CA." >>$LOGFILE
             (( ERROR_COUNT++ ))
             ERROR_CERTS="$certificate (production); $ERROR_CERTS"
-        else
-            # Copy certificates into the right place, commit, etc.
-            cd /data/puppet
-            git checkout --quiet master
-            git fetch --quiet
-            git rebase --quiet origin/master
-            mv $CERT_DIR/*${cert_file}.crt $PUPPET_DIR/certs/
-            mv $CERT_DIR/*${cert_file}.key $PUPPET_DIR/keys
-            chown -R :privategit-puppet $PUPPET_DIR/
-            chmod 0664 $PUPPET_DIR/certs/*
-            chmod 0660 $PUPPET_DIR/keys/*
-            git add $PUPPET_DIR/*
-            git commit --quiet -m "SSL: auto-renewed $certificate"
-            git push --quiet origin master 2>/dev/null
-            if [ "$?" != "0" ]; then
-              (( ERROR_COUNT++ ))
-              ERROR_CERTS="$certificate: Problem pushing to origin; $ERROR_CERTS"
-            fi
-            cd $START_DIR
         fi
     fi
 done < <( $START_DIR/renew.py --list --weeks=$WEEKS )
