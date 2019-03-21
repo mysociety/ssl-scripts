@@ -77,7 +77,7 @@ class CertRenewerCallable(object):
             self.step_num = 1
             print '[36m%s expires at %s[m' % (data['filename'], data['expiry'])
             if data['filename'].startswith('wildcard'):
-                self.step('Replace wildcard certificate with one for all needed domains\n')
+                self.step('Wildcard cert instructions to follow - see the wiki for now.\n')
                 continue
 
             # Let's see which vhosts.pl entries the domains of the certificate map to
@@ -109,11 +109,8 @@ class CertRenewerCallable(object):
                     cert_filename = vhost.split(' ')[1] + '.group'
                 else:
                     cert_filename = self.vhosts[vhost]['domains'][0]
-                self.step('Move new data into /data/servers')
-                print 'sudo mv /data/letsencrypt/certificates/%s.crt /data/puppet/site/profiles/files/certificates/etc/ssl/mysociety/certs/' % cert_filename
-                print 'sudo mv /data/letsencrypt/certificates/%s.key /data/puppet/site/profiles/files/certificates/etc/ssl/mysociety/keys/' % cert_filename
-                self.step('Commit certificate and key in /data/puppet and push. Puppet will deploy the new files and restart Nginx.', 1)
-                self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on leopard or to be more discriminating:')
+                self.step('The script will commit the certificate and key in /data/puppet and push. Puppet will deploy the new files and restart Nginx.')
+                self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on one of the management servers or to be more discriminating:')
                 for server in self.server_lookup.get(vhost, []):
                     server = '[32m%s[m' % server
                     print 'sudo ssh %s mysociety config' % server
