@@ -7,6 +7,7 @@ import glob
 import os
 import OpenSSL
 from utils import Vhosts
+from letsencrypt import CertManagerCallable
 
 
 class CertRenewerCallable(object):
@@ -23,6 +24,8 @@ class CertRenewerCallable(object):
 
         if args.list:
             self.list()
+        elif args.renew:
+            self.renew()
         else:
             self.output()
 
@@ -67,6 +70,48 @@ class CertRenewerCallable(object):
                     cert_filename = self.vhosts[vhost]['domains'][0]
 
             print(' '.join(vhosts_to_renew) + ',' + cert_filename)
+
+    def renew(self):
+        for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
+            if data['expiry'] >= self.future:
+                continue
+
+            cmc = CertManagerCallable()
+            cmc_args = argparse.Namespace
+            cmc_args.dry_run = False
+            cmc_args.which_ca = 'prod'
+            cmc_args.vhosts_pl_path = '/data/vhosts.pl'
+            cmc_args.all_vhosts = False
+
+            # Deal with wildcard certificates.
+            if data['filename'].startswith('wildcard'):
+                cmc_args.force_issue = True
+                cmc_args.wildcard = data['cn']
+                print('Renewing wildcard %s' % data['cn'])
+                cmc(cmc_args)
+            else:
+                cmc_args.force_issue = False
+                cmc_args.wildcard_cert = False
+                vhosts_to_renew = set(self.domain_lookup.get(dom, dom) for dom in data['domains'])
+
+                for vhost in vhosts_to_renew.copy():
+                    if not vhost.startswith('--group') and vhost not in self.vhosts:
+                        vhosts_to_renew.remove(vhost)
+
+                if not vhosts_to_renew:
+                    continue
+
+                for vhost in vhosts_to_renew:
+                    if vhost.startswith('--group'):
+                        cmc_args.group = vhost.split(' ')[1]
+                        print('Renewing group %s' % vhost.split(' ')[1])
+                        cmc(cmc_args)
+                    else:
+                        cmc_args.group = False
+                        cmc_args.vhost = [self.vhosts[vhost]['domains'][0]]
+                        print('Renewing vhost %s' % self.vhosts[vhost]['domains'][0])
+                        cmc(cmc_args)
+
 
     def output(self):
         for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
@@ -156,6 +201,8 @@ class CertRenewerCallable(object):
         parser.add_argument('--weeks', default=4, type=int, help='Number of weeks to look forward')
         # Whether to just list things
         parser.add_argument('--list', action='store_true', help='Just list the domains/groups for renewal with their filenames rather than full instructions for manual renewals')
+        # Whether to renew things
+        parser.add_argument('--renew', action='store_true', help='Attempt to renew certificates due to expire.')
         return parser
 
 
