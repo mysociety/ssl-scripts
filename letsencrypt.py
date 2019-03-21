@@ -57,7 +57,7 @@ class CertManagerCallable(object):
             acme_args.append("--force")
 
         subprocess.check_call(cmd_prefix +
-            ['sudo', './acme-sh-helper', '--domain', cn] +
+            ['./acme-sh-helper', '--domain', cn] +
             acme_args, cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
 
     def _generate_certificates(self, domains, cert_name=None):
