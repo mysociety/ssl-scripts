@@ -15,9 +15,7 @@ class CertManagerCallable(object):
     dry_run = None
     which_ca = None
 
-    def __call__(self):
-        parser = self._arg_parser()
-        args = parser.parse_args()
+    def __call__(self, args):
 
         self.dry_run = args.dry_run
         self.which_ca = args.which_ca
@@ -128,39 +126,43 @@ class CertManagerCallable(object):
     def _add_to_puppet(self, cmd_prefix, cert_dir, cert_name):
         subprocess.check_call(['./simp_le-git-helper', cert_dir, cert_name ], cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
 
-    def _arg_parser(self):
-        parser = argparse.ArgumentParser()
-        # Run mode
-        live_or_dry_group = parser.add_mutually_exclusive_group(required=True)
-        live_or_dry_group.add_argument('--live-run', action='store_false', dest='dry_run', help='Run in live run mode')
-        live_or_dry_group.add_argument('--dry-run', action='store_true', dest='dry_run', help='Run in dry run mode')
-
-        # CA selection
-        staging_or_prod_group = parser.add_mutually_exclusive_group(required=True)
-        staging_or_prod_group.add_argument(
-            '--staging-ca', action='store_const', dest='which_ca', const='staging', help='Use LetsEncrypt Staging CA')
-        staging_or_prod_group.add_argument(
-            '--prod-ca', action='store_const', dest='which_ca', const='prod', help='Use LetsEncrypt Production CA')
-
-        # Force. Only really useful with `--wildcard`
-        parser.add_argument('--force', action='store_true', dest='force_issue', default=False, help="Force issue even if no renewal appears necessary")
-
-        # Vhost selection
-        which_vhosts_group = parser.add_mutually_exclusive_group(required=True)
-        which_vhosts_group.add_argument(
-            '--all-vhosts', action='store_true', dest='all_vhosts', default=False, help="Apply to all eligible vhosts")
-        which_vhosts_group.add_argument('--wildcard', action="store", dest='wildcard_cert', help="Issue a wildcard certificate.")
-        which_vhosts_group.add_argument('--group', action='store', help="Specify a particular vhost group")
-        which_vhosts_group.add_argument('vhost', nargs='*', default=[], help="Specify a particular vhost")
-
-        # Misc options
-        parser.add_argument(
-            '--vhosts-pl-path', action='store', dest='vhosts_pl_path', default='/data/vhosts.pl',
-            help="Override path to vhosts.pl (FOR TESTING USE)")
-
-        return parser
-
 
 if __name__ == '__main__':
+
+    # Set-up argument parser.
+    parser = argparse.ArgumentParser()
+
+    # Run mode
+    live_or_dry_group = parser.add_mutually_exclusive_group(required=True)
+    live_or_dry_group.add_argument('--live-run', action='store_false', dest='dry_run', help='Run in live run mode')
+    live_or_dry_group.add_argument('--dry-run', action='store_true', dest='dry_run', help='Run in dry run mode')
+
+    # CA selection
+    staging_or_prod_group = parser.add_mutually_exclusive_group(required=True)
+    staging_or_prod_group.add_argument(
+        '--staging-ca', action='store_const', dest='which_ca', const='staging', help='Use LetsEncrypt Staging CA')
+    staging_or_prod_group.add_argument(
+        '--prod-ca', action='store_const', dest='which_ca', const='prod', help='Use LetsEncrypt Production CA')
+
+    # Force. Only really useful with `--wildcard`
+    parser.add_argument('--force', action='store_true', dest='force_issue', default=False, help="Force issue even if no renewal appears necessary")
+
+    # Vhost selection
+    which_vhosts_group = parser.add_mutually_exclusive_group(required=True)
+    which_vhosts_group.add_argument(
+        '--all-vhosts', action='store_true', dest='all_vhosts', default=False, help="Apply to all eligible vhosts")
+    which_vhosts_group.add_argument('--wildcard', action="store", dest='wildcard_cert', help="Issue a wildcard certificate.")
+    which_vhosts_group.add_argument('--group', action='store', help="Specify a particular vhost group")
+    which_vhosts_group.add_argument('vhost', nargs='*', default=[], help="Specify a particular vhost")
+
+    # Misc options
+    parser.add_argument(
+        '--vhosts-pl-path', action='store', dest='vhosts_pl_path', default='/data/vhosts.pl',
+        help="Override path to vhosts.pl (FOR TESTING USE)")
+
+    # Get those arguments
+    args = parser.parse_args()
+
+    # Call our main class, passing in the `argparse.Namespace` object resulting.
     cmc = CertManagerCallable()
-    cmc()
+    cmc(args)
