@@ -77,7 +77,17 @@ class CertRenewerCallable(object):
             self.step_num = 1
             print '[36m%s expires at %s[m' % (data['filename'], data['expiry'])
             if data['filename'].startswith('wildcard'):
-                self.step('Wildcard cert instructions to follow - see the wiki for now.\n')
+                self.step('Dry run')
+                print('sudo -u letsencrypt -i letsencrypt [33m --wildcard %s [m --dry-run --staging-ca' % data['cn'])
+                self.step('Check the output looks sensible (e.g. contains the domains you expect)', 1)
+                self.step('Live run, Staging CA')
+                print('sudo -u letsencrypt -i letsencrypt [33m --wildcard %s --force [m --live-run --staging-ca' % data['cn'])
+                print('ls /data/letsencrypt/staging_certificates/wildcard.%s*' % data['cn'])
+                self.step('Live run, Production CA')
+                print('sudo -u letsencrypt -i letsencrypt [33m --wildcard %s --force [m --live-run --prod-ca' % data['cn'])
+                self.step('The script will commit the certificate and key in /data/puppet and push. Puppet will deploy the new files and restart Nginx.')
+                self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on one of the management servers')
+                print('\n')
                 continue
 
             # Let's see which vhosts.pl entries the domains of the certificate map to
@@ -136,6 +146,7 @@ class CertRenewerCallable(object):
             yield {
                 'filename': os.path.basename(crt),
                 'domains': san,
+                'cn': cn,
                 'expiry': datetime.datetime.strptime(expiry, '%Y%m%d%H%M%SZ'),
             }
 
