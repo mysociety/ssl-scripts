@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+from __future__ import print_function
 import argparse
 import collections
 import datetime
@@ -28,7 +28,7 @@ class CertRenewerCallable(object):
 
 
     def step(self, s, col=4):
-        print '[3%dm%d. %s[m' % (col, self.step_num, s)
+        print('[3%dm%d. %s[m' % (col, self.step_num, s))
         self.step_num += 1
 
 
@@ -57,7 +57,7 @@ class CertRenewerCallable(object):
                 if not vhost.startswith('--group') and vhost not in self.vhosts:
                     vhosts_to_renew.remove(vhost)
             if not vhosts_to_renew:
-                print
+                print()
                 continue
 
             for vhost in vhosts_to_renew:
@@ -66,7 +66,7 @@ class CertRenewerCallable(object):
                 else:
                     cert_filename = self.vhosts[vhost]['domains'][0]
 
-            print ' '.join(vhosts_to_renew) + ',' + cert_filename
+            print(' '.join(vhosts_to_renew) + ',' + cert_filename)
 
     def output(self):
         for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
@@ -75,7 +75,7 @@ class CertRenewerCallable(object):
 
             # We have a soon-to-be expiring certificate
             self.step_num = 1
-            print '[36m%s expires at %s[m' % (data['filename'], data['expiry'])
+            print('[36m%s expires at %s[m' % (data['filename'], data['expiry']))
             if data['filename'].startswith('wildcard'):
                 self.step('Dry run')
                 print('sudo -u letsencrypt -i letsencrypt [33m --wildcard %s [m --dry-run --staging-ca' % data['cn'])
@@ -87,33 +87,33 @@ class CertRenewerCallable(object):
                 print('sudo -u letsencrypt -i letsencrypt [33m --wildcard %s --force [m --live-run --prod-ca' % data['cn'])
                 self.step('The script will commit the certificate and key in /data/puppet and push. Puppet will deploy the new files and restart Nginx.')
                 self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on one of the management servers')
-                print('\n')
+                print()
                 continue
 
             # Let's see which vhosts.pl entries the domains of the certificate map to
             vhosts_to_renew = set(self.domain_lookup.get(dom, dom) for dom in data['domains'])
             for vhost in vhosts_to_renew.copy():
                 if not vhost.startswith('--group') and vhost not in self.vhosts:
-                    print '[31mError dealing with %s[m' % vhost
+                    print('[31mError dealing with %s[m' % vhost)
                     vhosts_to_renew.remove(vhost)
             if not vhosts_to_renew:
-                print
+                print()
                 continue
 
             # Okay, we have something we can renew
             self.step('Dry run')
-            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --dry-run --staging-ca'
+            print('sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --dry-run --staging-ca')
             self.step('Check the output looks sensible (e.g. contains the domains you expect)', 1)
             self.step('Live run, Staging CA')
-            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --staging-ca'
+            print('sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --staging-ca')
             for vhost in vhosts_to_renew:
                 if vhost.startswith('--group'):
                     cert_filename = vhost.split(' ')[1] + '.group'
                 else:
                     cert_filename = self.vhosts[vhost]['domains'][0]
-                print 'ls /data/letsencrypt/staging_certificates/%s*' % cert_filename
+                print('ls /data/letsencrypt/staging_certificates/%s*' % cert_filename)
             self.step('Live run, Production CA')
-            print 'sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --prod-ca'
+            print('sudo -u letsencrypt -i letsencrypt [33m' + ' '.join(vhosts_to_renew) + '[m --live-run --prod-ca')
             for vhost in vhosts_to_renew:
                 if vhost.startswith('--group'):
                     cert_filename = vhost.split(' ')[1] + '.group'
@@ -123,11 +123,11 @@ class CertRenewerCallable(object):
                 self.step('If you want to speed this process, either run sudo mysociety base "mysociety config" on one of the management servers or to be more discriminating:')
                 for server in self.server_lookup.get(vhost, []):
                     server = '[32m%s[m' % server
-                    print 'sudo ssh %s mysociety config' % server
+                    print('sudo ssh %s mysociety config' % server)
                 self.step('Check expiry time')
-                print 'openssl s_client -servername %s -connect %s:443 </dev/null 2>/dev/null | openssl x509 -noout -enddate' % (vhost, vhost)
+                print('openssl s_client -servername %s -connect %s:443 </dev/null 2>/dev/null | openssl x509 -noout -enddate' % (vhost, vhost))
                 self.step('Unchanged expiry time probably means there is an old manual certificate with a different filename')
-            print
+            print()
 
     @staticmethod
     def get_cert_data():
