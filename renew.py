@@ -16,7 +16,7 @@ class CertRenewerCallable(object):
         args = parser.parse_args()
 
         self.future = datetime.datetime.now() + datetime.timedelta(weeks=args.weeks)
-        self.vhosts = Vhosts()
+        self.vhosts = Vhosts(args.vhosts_pl_path)
         self.domain_lookup = {}
         self.server_lookup = collections.defaultdict(set)
 
@@ -203,6 +203,10 @@ class CertRenewerCallable(object):
         parser.add_argument('--list', action='store_true', help='Just list the domains/groups for renewal with their filenames rather than full instructions for manual renewals')
         # Whether to renew things
         parser.add_argument('--renew', action='store_true', help='Attempt to renew certificates due to expire.')
+        # Misc options
+        parser.add_argument(
+            '--vhosts-pl-path', action='store', dest='vhosts_pl_path', default='/data/vhosts.pl',
+            help="Override path to vhosts.pl (FOR TESTING USE)")
         return parser
 
 
