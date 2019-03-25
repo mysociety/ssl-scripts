@@ -8,7 +8,7 @@ import sys
 
 
 class Vhosts(collections.Mapping):
-    def __init__(self, vhosts_pl_path="/data/servers/vhosts.pl"):
+    def __init__(self, vhosts_pl_path="/data/vhosts.pl"):
         self.vhosts = self._parse_vhosts_pl(vhosts_pl_path)
         # Special additions
         self.vhosts['mx0.mysociety.org'] = {
