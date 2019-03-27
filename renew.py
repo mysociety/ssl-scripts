@@ -108,7 +108,7 @@ class CertRenewerCallable(object):
                         cmc(cmc_args)
                     else:
                         cmc_args.group = False
-                        cmc_args.vhost = [self.vhosts[vhost]['domains'][0]]
+                        cmc_args.vhost = [vhost]
                         print('Renewing vhost %s' % self.vhosts[vhost]['domains'][0])
                         cmc(cmc_args)
 
