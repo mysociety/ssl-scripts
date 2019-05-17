@@ -86,7 +86,7 @@ class CertRenewerCallable(object):
             # Deal with wildcard certificates.
             if data['filename'].startswith('wildcard'):
                 cmc_args.force_issue = True
-                cmc_args.wildcard = data['cn']
+                cmc_args.wildcard_cert = data['cn']
                 print('Renewing wildcard %s' % data['cn'])
                 cmc(cmc_args)
             else:
