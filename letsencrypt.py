@@ -9,8 +9,8 @@ from utils import Vhosts
 
 
 class CertManagerCallable(object):
-    ACME_STAGING_ENDPOINT = "https://acme-staging.api.letsencrypt.org/directory"
-    ACME_PROD_ENDPOINT = "https://acme-v01.api.letsencrypt.org/directory"
+    ACME_STAGING_ENDPOINT = "https://acme-staging-v02.api.letsencrypt.org/directory"
+    ACME_PROD_ENDPOINT = "https://acme-v02.api.letsencrypt.org/directory"
 
     dry_run = None
     which_ca = None
