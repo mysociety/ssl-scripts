@@ -50,8 +50,9 @@ class CertRenewerCallable(object):
             if data['expiry'] >= self.future:
                 continue
 
-            # Just skip this for now.
+            # Handle wildcards
             if data['filename'].startswith('wildcard'):
+                print("{0}, *.{0}".format(data['filename'][9:].strip(".crt")))
                 continue
 
             # Let's see which vhosts.pl entries the domains of the certificate map to
