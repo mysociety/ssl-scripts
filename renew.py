@@ -179,7 +179,7 @@ class CertRenewerCallable(object):
         for crt in sorted(glob.glob('/etc/ssl/mysociety/certs/*.crt')):
             with open(crt) as f:
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, f.read())
-            expiry = cert.get_notAfter()
+            expiry = cert.get_notAfter().decode('ascii')
             cn = cert.get_subject().CN
             san = []
             for i in range(cert.get_extension_count()):
