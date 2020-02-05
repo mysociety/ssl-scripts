@@ -184,7 +184,7 @@ class CertRenewerCallable(object):
             san = []
             for i in range(cert.get_extension_count()):
                 ext = cert.get_extension(i)
-                if ext.get_short_name() != 'subjectAltName':
+                if ext.get_short_name() != b'subjectAltName':
                     continue
                 san = str(ext).lstrip('DNS:').split(', DNS:')
                 assert cn in san
