@@ -108,7 +108,7 @@ class CertManagerCallable(object):
         subprocess.check_call(cmd_prefix + [
             'simp_le', '--email', 'infrastructure@mysociety.org',
             '--default_root', '/data/letsencrypt/webroot/'] + all_vhosts_args + [
-            '-f', 'key.pem', '-f', 'account_key.json', '-f', 'fullchain.pem',
+            '-f', 'key.pem', '-f', 'account_key.json', '-f', 'account_reg.json', '-f', 'fullchain.pem',
             '--server', ca_url], cwd=actual_cwd)
 
         if self.dry_run:
