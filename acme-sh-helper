@@ -63,6 +63,7 @@ else
 fi
 
 ./acme.sh --install-cert -d ${DOMAIN} \
-	  --fullchain-file ${CRT_PATH}/wildcard.${DOMAIN}.crt \
-	  --key-file ${KEY_PATH}/wildcard.${DOMAIN}.key \
-	  --reloadcmd "${CMD}"
+         --fullchain-file ${CRT_PATH}/wildcard.${DOMAIN}.crt \
+         --key-file ${KEY_PATH}/wildcard.${DOMAIN}.key \
+         --reloadcmd "${CMD}" \
+         --force
