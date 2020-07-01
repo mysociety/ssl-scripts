@@ -29,6 +29,10 @@ class Vhosts(collections.Mapping):
             'aliases': ['www.mysocietyemergency.org']
         }
 
+        self.vhosts['parlvid.mysociety.org'] = {
+            'servers': ['starling']
+        }
+
     def __getitem__(self, key):
         vhost = self.vhosts[key]
         vhost['domains'] = self._get_vhost_domains(key, vhost)
