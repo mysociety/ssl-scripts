@@ -15,4 +15,4 @@ requests==2.23.0
 requests-toolbelt==0.9.1
 simp-le-client==0.18.1
 six==1.15.0
-urllib3==1.25.9
+urllib3==1.26.5
