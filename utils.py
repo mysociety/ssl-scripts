@@ -21,7 +21,22 @@ class Vhosts(collections.Mapping):
             'servers': ['leopard', 'panther', 'kingfisher', 'raven'],
             'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'nagios-external.mysociety.org',
                 'git.mysociety.org', 'icinga.mysociety.org', 'icinga-external.mysociety.org', 
-                'grafana.mysociety.org'
+                'grafana.mysociety.org', 'secure.mysociety.org'
+            ]
+        }
+        self.vhosts['mysociety.org'] = {
+            'ssl_group': 'mySociety.external',
+            'servers': ['mslb001hexa', 'mslb001sova'],
+            'aliases': [
+                'mysociety.org',
+                'mysociety.org.uk',
+                'www.mysociety.org.uk',
+                'mysociety.uk',
+                'www.mysociety.uk',
+                'democracy.co.uk',
+                'www.democracy.co.uk',
+                'democracy.org.uk',
+                'www.democracy.org.uk'
             ]
         }
         self.vhosts['mysocietyemergency.org'] = {
