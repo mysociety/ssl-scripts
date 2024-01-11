@@ -42,6 +42,7 @@ source ./acme.sh.env
 ./acme.sh --issue -d ${DOMAIN} -d "*.${DOMAIN}" \
 	  --domain-alias ${DOMAIN}.acme.mysociety.org \
 	  --dns dns_nsupdate \
+          --server letsencrypt \
 	  --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
 	  $STAGING $FORCE
 
