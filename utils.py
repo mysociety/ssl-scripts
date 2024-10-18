@@ -18,9 +18,8 @@ class Vhosts(collections.Mapping):
         }
         self.vhosts['git.mysociety.org'] = {
             'ssl_group': 'mySociety',
-            'servers': ['leopard', 'panther', 'kingfisher', 'raven'],
-            'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'nagios-external.mysociety.org',
-                'git.mysociety.org', 'icinga.mysociety.org', 'icinga-external.mysociety.org', 
+            'servers': ['raven', 'panther', 'kingfisher', 'raven'],
+            'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'git.mysociety.org', 'icinga.mysociety.org',
                 'grafana.mysociety.org', 'secure.mysociety.org', 'icinga2.mysociety.org'
             ]
         }
