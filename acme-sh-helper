@@ -39,13 +39,23 @@ export NSUPDATE_KEY="/data/letsencrypt/etc/acme.key"
 echo "==> Attempting to issue cert for $DOMAIN"
 cd /data/letsencrypt/acme.sh
 source ./acme.sh.env
-./acme.sh --issue -d ${DOMAIN} -d "*.${DOMAIN}" \
-	  --domain-alias ${DOMAIN}.acme.mysociety.org \
-	  --dns dns_nsupdate \
-          --keylength 4096 \
-          --server letsencrypt \
-	  --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
-	  $STAGING $FORCE
+if [ "$DOMAIN" == "whatdotheyknow.com" ]; then
+    source /data/letsencrypt/etc/cf_token.sh
+    ./acme.sh --issue -d ${DOMAIN} -d "*.${DOMAIN}" \
+              --dns dns_cf \
+              --keylength 4096 \
+              --server letsencrypt \
+              --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
+	      $STAGING $FORCE
+else
+    ./acme.sh --issue -d ${DOMAIN} -d "*.${DOMAIN}" \
+	      --domain-alias ${DOMAIN}.acme.mysociety.org \
+	      --dns dns_nsupdate \
+              --keylength 4096 \
+              --server letsencrypt \
+	      --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
+	      $STAGING $FORCE
+fi
 
 if [ "$?" -ne "0" ] ; then
    echo "==> There was a problem issuing the certificate for ${DOMAIN}."
