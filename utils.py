@@ -16,18 +16,10 @@ class Vhosts(collections.Mapping):
             'servers': ['bittern', 'starling'],
             'aliases': ['mx1.mysociety.org', 'mx0.ukcod.org.uk', 'mx1.ukcod.org.uk', 'smtp.mysociety.org']
         }
-        self.vhosts['git.mysociety.org'] = {
-            'ssl_group': 'mySociety',
-            'servers': ['raven', 'panther', 'kingfisher', 'raven'],
-            'aliases': ['debian.mysociety.org', 'nagios.mysociety.org', 'git.mysociety.org', 'icinga.mysociety.org',
-                'grafana.mysociety.org', 'secure.mysociety.org', 'icinga2.mysociety.org'
-            ]
-        }
         self.vhosts['mysociety.org'] = {
             'ssl_group': 'mySociety.external',
             'servers': ['mslb001hexa', 'mslb001sova'],
             'aliases': [
-                'mysociety.org',
                 'mysociety.org.uk',
                 'www.mysociety.org.uk',
                 'mysociety.uk',
@@ -41,10 +33,6 @@ class Vhosts(collections.Mapping):
         self.vhosts['mysocietyemergency.org'] = {
             'servers': ['emergency'],
             'aliases': ['www.mysocietyemergency.org']
-        }
-
-        self.vhosts['parlvid.mysociety.org'] = {
-            'servers': ['starling']
         }
 
     def __getitem__(self, key):
