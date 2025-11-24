@@ -25,7 +25,7 @@ while test -n "$1"; do
 	    shift
 	    ;;
 	--staging)
-	    STAGING=--staging
+	    STAGING=1
 	    shift
 	    ;;
 	--force)
@@ -52,6 +52,12 @@ fi
 if [ ${#DOMAINS[@]} -gt 1 ] && [ "$WILDCARD" ] ; then
     echo "==> Please only specify one --domain foo.tld argument for a wildcard certificate."
     exit 1
+fi
+
+if [ "$STAGING" ] ; then
+    SERVER="https://acme-staging-v02.api.letsencrypt.org/directory"
+else
+    SERVER="https://acme-v02.api.letsencrypt.org/directory"
 fi
 
 DOMAIN=${DOMAINS[0]}
@@ -84,10 +90,10 @@ source ./acme.sh.env
 ./acme.sh --issue "${DOMAIN_PARAMS[@]}" \
           $MODE \
           $DOMAIN_ALIAS \
+          --server $SERVER \
           --keylength 4096 \
-          --server letsencrypt \
           --pre-hook "/data/vhost/acme-challenge.mysociety.org/ssl-scripts/acme-pre-hook" \
-          $STAGING $FORCE
+          $FORCE
 
 if [ "$?" -ne "0" ] ; then
    echo "==> There was a problem issuing the certificate for ${DOMAIN}."
