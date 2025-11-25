@@ -38,16 +38,27 @@ class CertManagerCallable(object):
                 domains = known_vhosts[v]['domains']
                 self._generate_certificates(domains)
 
-    def _generate_wildcard_certificate(self, cn):
-
+    def _call_acme_sh_helper(self, domains, wildcard, cert_name=None):
         # cater for a dry run.
         if self.dry_run:
             cmd_prefix = ['echo']
         else:
             cmd_prefix = []
 
-        # cater for optional arguments.
         acme_args = []
+
+        if not cert_name:
+            cert_name=domains[0]
+
+        acme_args += ["--cert-name", cert_name]
+
+        for domain in domains:
+            acme_args += ["--domain", domain]
+
+        if wildcard:
+            acme_args.append('--wildcard')
+
+        # cater for optional arguments.
         if self.which_ca == "staging":
             acme_args.append("--staging")
 
@@ -55,8 +66,11 @@ class CertManagerCallable(object):
             acme_args.append("--force")
 
         subprocess.check_call(cmd_prefix +
-            ['./acme-sh-helper', '--domain', cn] +
-            acme_args, cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
+            ['./acme-sh-helper'] + acme_args,
+            cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
+
+    def _generate_wildcard_certificate(self, cn):
+        self._call_acme_sh_helper([cn], True, cert_name=f"wildcard.{cn}")
 
     def _generate_certificates(self, domains, cert_name=None):
         if not domains:
@@ -74,62 +88,8 @@ class CertManagerCallable(object):
     def _generate_certificate(self, domains, cert_name=None):
         if not domains:
             return
-        if not cert_name:
-            cert_name = domains[0]
 
-        # Prepare arguments to simp_le
-        all_vhosts_args = []
-        for v in domains:
-            all_vhosts_args.append("-d")
-            all_vhosts_args.append(v)
-
-        # Determine CA endpoint to use
-        # and where should certificate target dir be?
-        if self.which_ca == "prod":
-            ca_url = self.ACME_PROD_ENDPOINT
-            vhost_cwd = "/data/letsencrypt/certificates"
-        elif self.which_ca == "staging":
-            ca_url = self.ACME_STAGING_ENDPOINT
-            vhost_cwd = "/data/letsencrypt/staging_certificates"
-
-        # Make certificate target directory if not exists
-        if not os.path.exists(vhost_cwd):
-            if not self.dry_run:
-                os.mkdir(vhost_cwd)
-
-        # Actually run simp_le
-        if self.dry_run:
-            cmd_prefix = ['echo']
-            actual_cwd = None
-        else:
-            cmd_prefix = []
-            actual_cwd = vhost_cwd
-
-        try:
-            subprocess.check_call(cmd_prefix + [
-                'simp_le', '--email', 'infrastructure@mysociety.org',
-                '--default_root', '/data/letsencrypt/webroot/'] + all_vhosts_args + [
-                '-f', 'key.pem', '-f', 'account_key.json', '-f', 'account_reg.json', '-f', 'fullchain.pem',
-                '--server', ca_url], cwd=actual_cwd)
-        except subprocess.CalledProcessError as e:
-            print("Failed to get certificate for {}: command {} exited {}".format(cert_name, e.cmd, e.returncode))
-            return
-
-        if self.dry_run:
-            print("Rename key.pem to %s.key" % cert_name)
-            print("Rename fullchain.pem to %s.crt" % cert_name)
-            print("Run ./simp_le-git-helper %s %s" % (vhost_cwd, cert_name))
-        else:
-            os.rename(os.path.join(actual_cwd, 'key.pem'), os.path.join(actual_cwd, '%s.key' % cert_name))
-            os.rename(os.path.join(actual_cwd, 'fullchain.pem'), os.path.join(actual_cwd, '%s.crt' % cert_name))
-            if self.which_ca == "prod":
-                self._add_to_puppet(cmd_prefix, actual_cwd, cert_name)
-            else:
-                print("Not adding to Puppet in staging.")
-
-    def _add_to_puppet(self, cmd_prefix, cert_dir, cert_name):
-        subprocess.check_call(['./simp_le-git-helper', cert_dir, cert_name ], cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
-
+        self._call_acme_sh_helper(domains, False, cert_name=cert_name)
 
 if __name__ == '__main__':
 
