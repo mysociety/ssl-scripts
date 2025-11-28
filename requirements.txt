@@ -5,6 +5,7 @@ charset-normalizer==3.2.0
 cryptography==42.0.4
 idna==2.7
 josepy==1.13.0
+loguru==0.7.3
 mock==5.1.0
 pycparser==2.21
 pyOpenSSL==24.0.0

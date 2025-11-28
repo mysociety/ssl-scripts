@@ -6,6 +6,8 @@ import datetime
 import glob
 import os
 import OpenSSL
+import sys
+from loguru import logger
 from utils import Vhosts
 from letsencrypt import CertManagerCallable
 
@@ -14,6 +16,11 @@ class CertRenewerCallable(object):
     def __call__(self):
         parser = self._arg_parser()
         args = parser.parse_args()
+
+        if args.log_file:
+            logger.remove()  # Remove the default DEBUG level stderr sink.
+            logger.add(sys.stderr, level="ERROR")  # Only ERRORs or worse go to stderr.
+            logger.add(args.log_file, level="DEBUG")
 
         self.future = datetime.datetime.now() + datetime.timedelta(weeks=args.weeks)
         self.vhosts = Vhosts(args.vhosts_pl_path)
@@ -88,7 +95,7 @@ class CertRenewerCallable(object):
             # Deal with wildcard certificates.
             if data['filename'].startswith('wildcard'):
                 cmc_args.wildcard_cert = data['cn']
-                print('Renewing wildcard %s' % data['cn'])
+                logger.info('Renewing wildcard %s' % data['cn'])
                 cmc(cmc_args)
             else:
                 cmc_args.wildcard_cert = False
@@ -104,12 +111,12 @@ class CertRenewerCallable(object):
                 for vhost in vhosts_to_renew:
                     if vhost.startswith('--group'):
                         cmc_args.group = vhost.split(' ')[1]
-                        print('Renewing group %s' % vhost.split(' ')[1])
+                        logger.info('Renewing group %s' % vhost.split(' ')[1])
                         cmc(cmc_args)
                     else:
                         cmc_args.group = False
                         cmc_args.vhost = [vhost]
-                        print('Renewing vhost %s' % self.vhosts[vhost]['domains'][0])
+                        logger.info('Renewing vhost %s' % self.vhosts[vhost]['domains'][0])
                         cmc(cmc_args)
 
 
@@ -204,6 +211,9 @@ class CertRenewerCallable(object):
         # Whether to renew things
         parser.add_argument('--renew', action='store_true', help='Attempt to renew certificates due to expire.')
         # Misc options
+        parser.add_argument(
+            '--log-file', action='store', dest='log_file',
+            help="When provided, all logs will be appended to the given file rather than printed to sderr except error logs, which will appear in both.")
         parser.add_argument(
             '--vhosts-pl-path', action='store', dest='vhosts_pl_path', default='/data/vhosts.pl',
             help="Override path to vhosts.pl (FOR TESTING USE)")
