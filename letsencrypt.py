@@ -6,6 +6,11 @@ import os
 import subprocess
 import sys
 from utils import Vhosts
+from loguru import logger
+
+
+class CertGenerationError(Exception):
+    pass
 
 
 class CertManagerCallable(object):
@@ -65,9 +70,21 @@ class CertManagerCallable(object):
         if self.force_issue:
             acme_args.append("--force")
 
-        subprocess.check_call(cmd_prefix +
-            ['./acme-sh-helper'] + acme_args,
-            cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/")
+        command = ['./acme-sh-helper'] + acme_args
+
+        try:
+            result = subprocess.run(
+                command,
+                cwd="/data/vhost/acme-challenge.mysociety.org/ssl-scripts/",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=True
+            )
+            logger.debug(f"{command} succeeded with output:\n {result.stdout}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"{command} failed with output:\n {e.stdout}")
+            raise CertGenerationError()
 
     def _generate_wildcard_certificate(self, cn):
         self._call_acme_sh_helper([cn], True, cert_name=f"wildcard.{cn}")

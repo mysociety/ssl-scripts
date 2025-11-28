@@ -9,7 +9,7 @@ import OpenSSL
 import sys
 from loguru import logger
 from utils import Vhosts
-from letsencrypt import CertManagerCallable
+from letsencrypt import CertManagerCallable, CertGenerationError
 
 
 class CertRenewerCallable(object):
@@ -32,7 +32,9 @@ class CertRenewerCallable(object):
         if args.list:
             self.list()
         elif args.renew:
-            self.renew()
+            failed = self.renew()
+            if failed:
+                sys.exit(1)
         else:
             self.output()
 
@@ -80,6 +82,7 @@ class CertRenewerCallable(object):
             print(' '.join(vhosts_to_renew) + ',' + cert_filename)
 
     def renew(self):
+        failed = False
         for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
             if data['expiry'] >= self.future:
                 continue
@@ -96,7 +99,11 @@ class CertRenewerCallable(object):
             if data['filename'].startswith('wildcard'):
                 cmc_args.wildcard_cert = data['cn']
                 logger.info('Renewing wildcard %s' % data['cn'])
-                cmc(cmc_args)
+                try:
+                    cmc(cmc_args)
+                except CertGenerationError:
+                    failed = True
+                    logger.error('Failed to renew wildcard %s' % data['cn'])
             else:
                 cmc_args.wildcard_cert = False
                 vhosts_to_renew = set(self.domain_lookup.get(dom, dom) for dom in data['domains'])
@@ -112,13 +119,22 @@ class CertRenewerCallable(object):
                     if vhost.startswith('--group'):
                         cmc_args.group = vhost.split(' ')[1]
                         logger.info('Renewing group %s' % vhost.split(' ')[1])
-                        cmc(cmc_args)
+                        try:
+                            cmc(cmc_args)
+                        except CertGenerationError:
+                            failed = True
+                            logger.error('Failed to renew group %s' % vhost.split(' ')[1])
                     else:
                         cmc_args.group = False
                         cmc_args.vhost = [vhost]
                         logger.info('Renewing vhost %s' % self.vhosts[vhost]['domains'][0])
-                        cmc(cmc_args)
+                        try:
+                            cmc(cmc_args)
+                        except CertGenerationError:
+                            failed = True
+                            logger.error('Failed to renew vhost %s' % self.vhosts[vhost]['domains'][0])
 
+        return failed
 
     def output(self):
         for data in sorted(self.get_cert_data(), key=lambda x: x['expiry']):
