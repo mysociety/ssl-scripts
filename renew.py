@@ -83,15 +83,14 @@ class CertRenewerCallable(object):
             cmc_args.which_ca = 'prod'
             cmc_args.vhosts_pl_path = '/data/vhosts.pl'
             cmc_args.all_vhosts = False
+            cmc_args.force_issue = True  # Renewals are early so force.
 
             # Deal with wildcard certificates.
             if data['filename'].startswith('wildcard'):
-                cmc_args.force_issue = True
                 cmc_args.wildcard_cert = data['cn']
                 print('Renewing wildcard %s' % data['cn'])
                 cmc(cmc_args)
             else:
-                cmc_args.force_issue = False
                 cmc_args.wildcard_cert = False
                 vhosts_to_renew = set(self.domain_lookup.get(dom, dom) for dom in data['domains'])
 
