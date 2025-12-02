@@ -118,3 +118,8 @@ fi
          --key-file "${KEY_PATH}/${CERT_NAME}.key" \
          --reloadcmd "${CMD}" \
          --force
+
+# Ensure public read perms as, without this, the puppet
+# repo shows to other users as having local changes
+# which then breaks some flows.
+chmod 644 "${KEY_PATH}/${CERT_NAME}.key"
