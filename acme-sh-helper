@@ -112,9 +112,18 @@ else
     CMD="/bin/true"
 fi
 
+CRT_FILE="${CRT_PATH}/${CERT_NAME}.crt"
+CA_FILE="${CRT_PATH}/${CERT_NAME}.ca.crt"
+KEY_FILE="${KEY_PATH}/${CERT_NAME}.key"
+
 ./acme.sh --install-cert -d ${DOMAIN} \
-         --fullchain-file "${CRT_PATH}/${CERT_NAME}.crt" \
-         --ca-file "${CRT_PATH}/${CERT_NAME}.ca.crt" \
-         --key-file "${KEY_PATH}/${CERT_NAME}.key" \
+         --fullchain-file ${CRT_FILE} \
+         --ca-file "${CA_FILE}" \
+         --key-file "${KEY_FILE}" \
          --reloadcmd "${CMD}" \
          --force
+
+echo "==> Updating permissions on the files."
+chmod 664 ${CRT_FILE}
+chmod 664 ${CA_FILE}
+chmod 660 ${KEY_FILE}
