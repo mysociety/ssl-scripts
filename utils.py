@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import collections
+import collections.abc
 import json
 import os
 import subprocess
