@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 
-class Vhosts(collections.Mapping):
+class Vhosts(collections.abc.Mapping):
     def __init__(self, vhosts_pl_path="/data/vhosts.pl"):
         self.vhosts = self._parse_vhosts_pl(vhosts_pl_path)
         # Special additions
