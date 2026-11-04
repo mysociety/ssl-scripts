@@ -97,6 +97,7 @@ class CertRenewerCallable(object):
             cmc_args.vhosts_pl_path = "/data/vhosts.pl"
             cmc_args.all_vhosts = False
             cmc_args.force_issue = True  # Renewals are early so force.
+            cmc_args.standalone_domains = []
 
             # Deal with wildcard certificates.
             if data["filename"].startswith("wildcard"):
@@ -133,18 +134,41 @@ class CertRenewerCallable(object):
                             )
                     else:
                         cmc_args.group = False
-                        cmc_args.vhost = [vhost]
-                        logger.info(
-                            "Renewing vhost %s" % self.vhosts[vhost]["domains"][0]
-                        )
+                        vhost_data = self.vhosts[vhost]
+                        vhost_name = vhost_data["domains"][0]
+
+                        if (
+                            "standalone_certs" in vhost_data
+                            and vhost_data["standalone_certs"] == 1
+                        ):
+                            if len(data["domains"]) == 1:
+                                domain = data["domains"][0]
+                                cert_description = (
+                                    f"standalone certificate for {domain} "
+                                    f"under vhost {vhost_name}"
+                                )
+                                cmc_args.standalone_domains = [domain]
+                            else:
+                                logger.error(
+                                    f"Cert {data['filename']} covers multiple domains "
+                                    f"but associated vhost {vhost_name} is configured to "
+                                    "use standalone certs, so the certificate will not be "
+                                    "renewed. Please ensure standlone certs are "
+                                    "covering each of the domains and then delete this cert."
+                                )
+                                failed = True
+                                # Not worrying about a standalone domain belonging to
+                                # multiple vhosts.
+                                break
+                        else:
+                            cmc_args.vhost = [vhost]
+                            cert_description = f"vhost {vhost_name}"
+                        logger.info(f"Renewing {cert_description}")
                         try:
                             cmc(cmc_args)
                         except CertGenerationError:
                             failed = True
-                            logger.error(
-                                "Failed to renew vhost %s"
-                                % self.vhosts[vhost]["domains"][0]
-                            )
+                            logger.error(f"Failed to renew {cert_description}")
 
         return failed
 
