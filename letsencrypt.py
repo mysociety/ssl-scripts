@@ -41,9 +41,39 @@ class CertManagerCallable(object):
                 if "ssl_group" in data and data["ssl_group"] == args.group:
                     domains += data["domains"]
             self._generate_certificates(domains, cert_name="%s.group" % args.group)
+        elif args.standalone_domains:
+            for domain in args.standalone_domains:
+                matching_vhost = None
+                for vhost, data in known_vhosts.items():
+                    if (
+                        "standalone_certs" in data
+                        and data["standalone_certs"] == 1
+                        and domain in data["domains"]
+                    ):
+                        matching_vhost = vhost
+                        break
+
+                if not matching_vhost:
+                    print(
+                        "could not find a vhost using standalone certs "
+                        f"covering {domain}"
+                    )
+                    sys.exit(1)
+                self._generate_certificates([domain])
+
         else:
             for v in args.vhost:
-                domains = known_vhosts[v]["domains"]
+                vhost_data = known_vhosts[v]
+                if (
+                    "standalone_certs" in vhost_data
+                    and vhost_data["standalone_certs"] == 1
+                ):
+                    print(
+                        f"vhost {v} is using standalone certs; certs should "
+                        "be issued for individual domains via the --standalone flag."
+                    )
+                    sys.exit(1)
+                domains = vhost_data["domains"]
                 self._generate_certificates(domains)
 
     def _call_acme_sh_helper(self, domains, wildcard, cert_name=None):
@@ -168,6 +198,14 @@ def main(argv=None):
     )
     which_vhosts_group.add_argument(
         "--group", action="store", help="Specify a particular vhost group"
+    )
+    which_vhosts_group.add_argument(
+        "--standalone",
+        action="store",
+        help="Specify a domain which is under a vhost using standalone certs.",
+        dest="standalone_domains",
+        nargs="*",
+        default=[],
     )
     which_vhosts_group.add_argument(
         "vhost", nargs="*", default=[], help="Specify a particular vhost"
