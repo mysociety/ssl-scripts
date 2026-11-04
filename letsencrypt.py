@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 import argparse
 import json
 import os
 import subprocess
 import sys
-from utils import Vhosts
+
 from loguru import logger
+
+from utils import Vhosts
 
 
 class CertGenerationError(Exception):
@@ -35,25 +38,25 @@ class CertManagerCallable(object):
         elif args.group:
             domains = []
             for vhost, data in known_vhosts.items():
-                if 'ssl_group' in data and data['ssl_group'] == args.group:
-                    domains += data['domains']
+                if "ssl_group" in data and data["ssl_group"] == args.group:
+                    domains += data["domains"]
             self._generate_certificates(domains, cert_name="%s.group" % args.group)
         else:
             for v in args.vhost:
-                domains = known_vhosts[v]['domains']
+                domains = known_vhosts[v]["domains"]
                 self._generate_certificates(domains)
 
     def _call_acme_sh_helper(self, domains, wildcard, cert_name=None):
         # cater for a dry run.
         if self.dry_run:
-            cmd_prefix = ['echo']
+            cmd_prefix = ["echo"]
         else:
             cmd_prefix = []
 
         acme_args = []
 
         if not cert_name:
-            cert_name=domains[0]
+            cert_name = domains[0]
 
         acme_args += ["--cert-name", cert_name]
 
@@ -61,7 +64,7 @@ class CertManagerCallable(object):
             acme_args += ["--domain", domain]
 
         if wildcard:
-            acme_args.append('--wildcard')
+            acme_args.append("--wildcard")
 
         # cater for optional arguments.
         if self.which_ca == "staging":
@@ -70,7 +73,7 @@ class CertManagerCallable(object):
         if self.force_issue:
             acme_args.append("--force")
 
-        command = ['./acme-sh-helper'] + acme_args
+        command = ["./acme-sh-helper"] + acme_args
 
         try:
             result = subprocess.run(
@@ -79,7 +82,7 @@ class CertManagerCallable(object):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                check=True
+                check=True,
             )
             logger.debug(f"{command} succeeded with output:\n {result.stdout}")
         except subprocess.CalledProcessError as e:
@@ -96,11 +99,11 @@ class CertManagerCallable(object):
             cert_name = domains[0]
 
         for i in range(0, len(domains), 100):
-            if len(domains)>100:
-                cn = '%s.%s' % (chr(i/100+65), cert_name)
+            if len(domains) > 100:
+                cn = "%s.%s" % (chr(i / 100 + 65), cert_name)
             else:
                 cn = cert_name
-            self._generate_certificate(domains[i:i+100], cert_name=cn)
+            self._generate_certificate(domains[i : i + 100], cert_name=cn)
 
     def _generate_certificate(self, domains, cert_name=None):
         if not domains:
@@ -108,38 +111,77 @@ class CertManagerCallable(object):
 
         self._call_acme_sh_helper(domains, False, cert_name=cert_name)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     # Set-up argument parser.
     parser = argparse.ArgumentParser()
 
     # Run mode
     live_or_dry_group = parser.add_mutually_exclusive_group(required=True)
-    live_or_dry_group.add_argument('--live-run', action='store_false', dest='dry_run', help='Run in live run mode')
-    live_or_dry_group.add_argument('--dry-run', action='store_true', dest='dry_run', help='Run in dry run mode')
+    live_or_dry_group.add_argument(
+        "--live-run", action="store_false", dest="dry_run", help="Run in live run mode"
+    )
+    live_or_dry_group.add_argument(
+        "--dry-run", action="store_true", dest="dry_run", help="Run in dry run mode"
+    )
 
     # CA selection
     staging_or_prod_group = parser.add_mutually_exclusive_group(required=True)
     staging_or_prod_group.add_argument(
-        '--staging-ca', action='store_const', dest='which_ca', const='staging', help='Use LetsEncrypt Staging CA')
+        "--staging-ca",
+        action="store_const",
+        dest="which_ca",
+        const="staging",
+        help="Use LetsEncrypt Staging CA",
+    )
     staging_or_prod_group.add_argument(
-        '--prod-ca', action='store_const', dest='which_ca', const='prod', help='Use LetsEncrypt Production CA')
+        "--prod-ca",
+        action="store_const",
+        dest="which_ca",
+        const="prod",
+        help="Use LetsEncrypt Production CA",
+    )
 
     # Force. Only really useful with `--wildcard`
-    parser.add_argument('--force', action='store_true', dest='force_issue', default=False, help="Force issue even if no renewal appears necessary")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        dest="force_issue",
+        default=False,
+        help="Force issue even if no renewal appears necessary",
+    )
 
     # Vhost selection
     which_vhosts_group = parser.add_mutually_exclusive_group(required=True)
     which_vhosts_group.add_argument(
-        '--all-vhosts', action='store_true', dest='all_vhosts', default=False, help="Apply to all eligible vhosts")
-    which_vhosts_group.add_argument('--wildcard', action="store", dest='wildcard_cert', help="Issue a wildcard certificate.")
-    which_vhosts_group.add_argument('--group', action='store', help="Specify a particular vhost group")
-    which_vhosts_group.add_argument('vhost', nargs='*', default=[], help="Specify a particular vhost")
+        "--all-vhosts",
+        action="store_true",
+        dest="all_vhosts",
+        default=False,
+        help="Apply to all eligible vhosts",
+    )
+    which_vhosts_group.add_argument(
+        "--wildcard",
+        action="store",
+        dest="wildcard_cert",
+        help="Issue a wildcard certificate.",
+    )
+    which_vhosts_group.add_argument(
+        "--group", action="store", help="Specify a particular vhost group"
+    )
+    which_vhosts_group.add_argument(
+        "vhost", nargs="*", default=[], help="Specify a particular vhost"
+    )
 
     # Misc options
     parser.add_argument(
-        '--vhosts-pl-path', action='store', dest='vhosts_pl_path', default='/data/vhosts.pl',
-        help="Override path to vhosts.pl (FOR TESTING USE)")
+        "--vhosts-pl-path",
+        action="store",
+        dest="vhosts_pl_path",
+        default="/data/vhosts.pl",
+        help="Override path to vhosts.pl (FOR TESTING USE)",
+    )
 
     # Get those arguments
     args = parser.parse_args()
