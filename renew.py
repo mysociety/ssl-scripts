@@ -16,9 +16,9 @@ from utils import Vhosts
 
 
 class CertRenewerCallable(object):
-    def __call__(self):
+    def __call__(self, argv=None):
         parser = self._arg_parser()
-        args = parser.parse_args()
+        args = parser.parse_args(argv)
 
         if args.log_file:
             logger.remove()  # Remove the default DEBUG level stderr sink.
@@ -312,6 +312,10 @@ class CertRenewerCallable(object):
         return parser
 
 
-if __name__ == "__main__":
+def main(argv=None):
     cmc = CertRenewerCallable()
-    cmc()
+    cmc(argv)
+
+
+if __name__ == "__main__":
+    main()

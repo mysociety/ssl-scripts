@@ -112,8 +112,7 @@ class CertManagerCallable(object):
         self._call_acme_sh_helper(domains, False, cert_name=cert_name)
 
 
-if __name__ == "__main__":
-
+def main(argv=None):
     # Set-up argument parser.
     parser = argparse.ArgumentParser()
 
@@ -184,8 +183,12 @@ if __name__ == "__main__":
     )
 
     # Get those arguments
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Call our main class, passing in the `argparse.Namespace` object resulting.
     cmc = CertManagerCallable()
     cmc(args)
+
+
+if __name__ == "__main__":
+    main()
